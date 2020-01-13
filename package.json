@@ -1,0 +1,33 @@
+{
+  "name": "geotiff-stats",
+  "version": "0.0.0",
+  "description": "Get Statistics from a Large GeoTIFF without Crashing Your Browser",
+  "main": "index.js",
+  "scripts": {
+    "setup": "cd test/data && bash setup.sh",
+    "test": "node ./node_modules/.bin/mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GeoTIFF/geotiff-stats.git"
+  },
+  "keywords": [
+    "geotiff",
+    "stats",
+    "minimum",
+    "maximum",
+    "satellite",
+    "imagery"
+  ],
+  "author": "Daniel J. Dufour",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GeoTIFF/geotiff-stats/issues"
+  },
+  "homepage": "https://github.com/GeoTIFF/geotiff-stats#readme",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "geotiff": "^1.0.0-beta.6",
+    "mocha": "^7.0.0"
+  }
+}
