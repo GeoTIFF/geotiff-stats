@@ -1,6 +1,5 @@
 # geotiff-stats
-Get Statistics from a Large GeoTIFF without Crashing Your Browser
-
+Get Statistics from a Large GeoTIFF while Using a Low Amount of Memory
 # install
 `npm install geotiff-stats`
 

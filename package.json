@@ -1,7 +1,7 @@
 {
   "name": "geotiff-stats",
   "version": "0.0.0",
-  "description": "Get Statistics from a Large GeoTIFF without Crashing Your Browser",
+  "description": "Get Statistics from a Large GeoTIFF while Using a Low Amount of Memory",
   "main": "index.js",
   "scripts": {
     "setup": "cd test/data && bash setup.sh",

@@ -2,6 +2,7 @@ const xpath = require('xpath');
 const { getDecoder } = require('geotiff/dist/compression');
 const { parseXml } = require('geotiff/dist/globals');
 
+// took this from geotiff package
 function sum(array, start, end) {
   let s = 0;
   for (let i = start; i < end; ++i) {
