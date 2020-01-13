@@ -2,60 +2,6 @@ const xpath = require('xpath');
 const { getDecoder } = require('geotiff/dist/compression');
 const { parseXml } = require('geotiff/dist/globals');
 
-/*
-async function getStats(image, options) {
-  options = options || {};
-  const maxBufferSize = options.maxBufferSize || 800; // this is 1 KB
-  const debug = options.debug || false;
-
-  if (debug) console.log("image:", image);
-
-  const { fileDirectory } = image;
-
-  const numBands = fileDirectory.SamplesPerPixel;
-
-  const noDataValue = fileDirectory.GDAL_NODATA ? parseFloat(fileDirectory.GDAL_NODATA) : null;
-  if (debug) console.log("noDataValue:", noDataValue);
-
-  const bitsPerSample = Array.from(image.fileDirectory.BitsPerSample);
-  console.log("bitsPerSample:", bitsPerSample);
-  const chunkSizeInPixels = bitsPerSample.map(nbits => {
-    return maxBufferSize / nbits;
-  });
-  console.log("chunkSizeInPixels:", chunkSizeInPixels);
-  const sides = chunkSizeInPixels.map(size => Math.round(Math.sqrt(size)));
-  if (debug) console.log("sides:", sides);
-  const chunkHeights = sides.map(side => side);
-  const chunkWidths = sides.map(side => side);
-  console.log("width:", image.getWidth());
-  const numRowsOfChunks = chunkHeights.map(chunkHeight => Math.ceil(image.getHeight() / chunkHeight));
-  const numColumnsOfChunks = chunkWidths.map(chunkWidth => Math.ceil(image.getWidth() / chunkWidth));
-
-  const maxes = [];
-  const mins = [];
-
-  for (let bandIndex = 0; bandIndex < numBands; bandIndex++) {
-      const chunkHeight = chunkHeights[bandIndex];
-      const chunkWidth = chunkWidths[bandIndex];
-      for (let rowIndex = 0; rowIndex < numRowsOfChunks; rowIndex++) {
-        for (let columnIndex = 0; columnIndex < numColumnsOfChunks; columnIndex++) {
-          const top = rowIndex * chunkHeight;
-          const left = columnIndex * chunkWidth;
-          const right = left + chunkWidth;
-          const bottom = top + chunkHeight;
-          const params = {
-            samples: [bandIndex],
-            window: [left, top, right, bottom]
-          };
-          console.log("params:", params);
-          const chunk = await image.readRasters(options);
-          console.log("chunk:", chunk);
-        }
-      }
-  }
-}
-*/
-
 function sum(array, start, end) {
   let s = 0;
   for (let i = start; i < end; ++i) {
