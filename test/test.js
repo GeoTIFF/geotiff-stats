@@ -5,36 +5,37 @@ const { getStats } = require('../index.js');
 
 const SECONDS_TO_MILLISECONDS = 1000;
 
-describe("GeoTIFF.js Test Data", function() {
-  this.timeout(50 * SECONDS_TO_MILLISECONDS);
-  it('GeoTIFF without Statistics', async function() {
-    const data = readFileSync('./test/data/initial.tiff');
+async function getStatsFromFilepath(filepath) {
+    const data = readFileSync(filepath);
     const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
     const geotiff = await fromArrayBuffer(arrayBuffer);
     const image = await geotiff.getImage();
-    const { bands } = await getStats(image, true);
+    return await getStats(image, true);
+}
+
+describe("GeoTIFF.js Test Data", function() {
+  this.timeout(50 * SECONDS_TO_MILLISECONDS);
+  it('GeoTIFF without Statistics', async function() {
+    const { bands } = await getStatsFromFilepath('./test/data/initial.tiff');
     expect(bands[0].min).to.equal(0);
     expect(bands[0].max).to.equal(65507);
   });
   it('GeoTIFF with Statistics', async function() {
-    const data = readFileSync('./test/data/stats.tiff');
-    const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-    const geotiff = await fromArrayBuffer(arrayBuffer);
-    const image = await geotiff.getImage();
-    const { bands } = await getStats(image, true);
+    const { bands } = await getStatsFromFilepath('./test/data/initial.tiff');
     expect(bands[0].min).to.equal(0);
     expect(bands[0].max).to.equal(65507);
   });
+  it('GeoTIFF with Color Palette', async function() {
+    const { bands } = await getStatsFromFilepath('./test/data/GeogToWGS84GeoKey5.tif');
+    expect(bands[0].min).to.equal(0);
+    expect(bands[0].max).to.equal(2);
+  })
 });
 
 describe("Landsat Data", function() {
   this.timeout(5 * SECONDS_TO_MILLISECONDS);
   it('should get stats for Landsat Scene', async function() {
-    const data = readFileSync('./test/data/LC80120312013106LGN01_B6.tif');
-    const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-    const geotiff = await fromArrayBuffer(arrayBuffer);
-    const image = await geotiff.getImage();
-    const { bands } = await getStats(image, true);
+    const { bands } = await getStatsFromFilepath('./test/data/LC80120312013106LGN01_B6.tif');
     expect(bands[0].min).to.equal(0);
     expect(bands[0].max).to.equal(62196);
   });
@@ -42,11 +43,7 @@ describe("Landsat Data", function() {
 
 describe("GHSL Data", function() {
   it('should get stats for worldwide GHSL', async function() {
-    const data = readFileSync('./test/data/GHS_POP_E2015_GLOBE_R2019A_54009_250_V1_0.tif');
-    const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-    const geotiff = await fromArrayBuffer(arrayBuffer);
-    const image = await geotiff.getImage();
-    const { bands } = await getStats(image, true);
+    const { bands } = await getStatsFromFilepath('./test/data/GHS_POP_E2015_GLOBE_R2019A_54009_250_V1_0.tif');
     expect(bands[0].min).to.equal(0);
     expect(bands[0].max).to.equal(442590.9375 );
   });

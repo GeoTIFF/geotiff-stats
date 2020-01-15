@@ -68,15 +68,22 @@ async function getStats(image){
           const decoder = getDecoder(fd);
           const tile = await image.getTileOrStrip(colIndex, rowIndex, bandIndex, decoder);
           const dataView = new DataView(tile.data);
+          const { byteLength } = dataView;
           for (let y = 0; y < tileHeight; y++) {
             for (let x = 0; x < tileWidth; x++) {
               const pixelOffset = ((y * tileWidth) + x) * bytesPerPixel;
-              const value = reader.call(
-                dataView, pixelOffset + srcSampleOffsets[bandIndex], image.littleEndian,
-              );
-              if (value != noDataValue && !isNaN(value)) {
-                if (typeof min === 'undefined' || value < min) min = value;
-                else if (typeof max === 'undefined' || value > max) max = value;
+
+              const byteOffset = pixelOffset + srcSampleOffsets[bandIndex];
+              if (byteOffset >= byteLength) {
+                /* we've reached the end of this row,
+                  so we can continue to the next row */
+                continue;
+              } else {
+                const value = reader.call(dataView, byteOffset, image.littleEndian);
+                if (value != noDataValue && !isNaN(value)) {
+                  if (typeof min === 'undefined' || value < min) min = value;
+                  else if (typeof max === 'undefined' || value > max) max = value;
+                }
               }
             }
           }

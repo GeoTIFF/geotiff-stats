@@ -1,3 +1,6 @@
+# files used by georaster for testing
+wget https://geotiff-stats.s3.amazonaws.com/GeogToWGS84GeoKey5.tif -O GeogToWGS84GeoKey5.tif
+
 # files used by geotiff.js for testing
 wget https://github.com/EOxServer/autotest/raw/f8d9f4bde6686abbda09c711d4bf5239f5378aa9/autotest/data/meris/MER_FRS_1P_reduced/ENVISAT-MER_FRS_1PNPDE20060816_090929_000001972050_00222_23322_0058_uint16_reduced_compressed.tif -O initial.tiff
 
