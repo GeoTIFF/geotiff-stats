@@ -5,12 +5,12 @@ const { getStats } = require('../index.js');
 
 const SECONDS_TO_MILLISECONDS = 1000;
 
-async function getStatsFromFilepath(filepath) {
+async function getStatsFromFilepath(filepath, debug=false) {
     const data = readFileSync(filepath);
     const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
     const geotiff = await fromArrayBuffer(arrayBuffer);
     const image = await geotiff.getImage();
-    return await getStats(image, true);
+    return await getStats(image, debug);
 }
 
 describe("GeoTIFF.js Test Data", function() {
@@ -29,6 +29,15 @@ describe("GeoTIFF.js Test Data", function() {
     const { bands } = await getStatsFromFilepath('./test/data/GeogToWGS84GeoKey5.tif');
     expect(bands[0].min).to.equal(0);
     expect(bands[0].max).to.equal(2);
+  });
+  it('RGB GeoTIFF that has GDAL Metadata without Stats', async function() {
+    const { bands } = await getStatsFromFilepath('./test/data/rgb_raster.tif');
+    expect(bands[0].min).to.equal(0);
+    expect(bands[0].max).to.equal(182);
+    expect(bands[1].min).to.equal(0);
+    expect(bands[1].max).to.equal(255);
+    expect(bands[2].min).to.equal(0);
+    expect(bands[2].max).to.equal(255);
   })
 });
 

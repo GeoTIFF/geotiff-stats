@@ -11,10 +11,12 @@ function sum(array, start, end) {
   return s;
 }
 
-async function getStats(image){
+async function getStats(image, debug){
 
   const fd = image.fileDirectory;
+  if (debug) console.log("fd:", fd);
   const numBands = fd.SamplesPerPixel;
+  if (debug) console.log("numBands:", numBands);
 
   const tileWidth = image.getTileWidth();
   const tileHeight = image.getTileHeight();
@@ -42,6 +44,8 @@ async function getStats(image){
   for (let bandIndex = 0; bandIndex < numBands; bandIndex++) {
     let min = undefined;
     let max = undefined;
+
+    // try to get min and max via GDAL Metadata
     if (fd.GDAL_METADATA) {
       const string = fd.GDAL_METADATA;
       const xmlDom = parseXml(string.substring(0, string.length - 1));
@@ -58,7 +62,9 @@ async function getStats(image){
           }
         }
       }
-    } else {
+    }
+
+    if (min === undefined || max === undefined) {
       for (let rowIndex = 0; rowIndex < numTilesPerCol; rowIndex++) {
         for (let colIndex = 0; colIndex < numTilesPerRow; colIndex++) {
           const reader = sampleReaders[bandIndex];
