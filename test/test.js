@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { readFileSync } = require('fs');
-const { fromArrayBuffer } = require('geotiff');
+const { fromArrayBuffer, fromUrls } = require('geotiff');
 const { getStats } = require('../index.js');
 
 const SECONDS_TO_MILLISECONDS = 1000;
@@ -42,11 +42,25 @@ describe("GeoTIFF.js Test Data", function() {
 });
 
 describe("Landsat Data", function() {
-  this.timeout(5 * SECONDS_TO_MILLISECONDS);
-  it('should get stats for Landsat Scene', async function() {
+  it('should get stats for downloaded Landsat Scene', async function() {
+    this.timeout(20 * SECONDS_TO_MILLISECONDS);
     const { bands } = await getStatsFromFilepath('./test/data/LC80120312013106LGN01_B6.tif');
     expect(bands[0].min).to.equal(0);
     expect(bands[0].max).to.equal(62196);
+  });
+  it('should get stats for online Landsat Scene with overview file', async function() {
+    this.timeout(20 * SECONDS_TO_MILLISECONDS);
+    const debug = false;
+    const folder_url = "https://landsat-pds.s3.amazonaws.com/c1/L8/139/045/LC08_L1TP_139045_20170304_20170316_01_T1";
+    const geotiff_url = folder_url + "/LC08_L1TP_139045_20170304_20170316_01_T1_B1.TIF";
+    const overview_url = folder_url + "/LC08_L1TP_139045_20170304_20170316_01_T1_B1.TIF.ovr";
+    const geotiff = await fromUrls(geotiff_url, [overview_url]);
+    if (debug) console.log("geotiff.overviewFiles:", geotiff.overviewFiles);
+    const image = await geotiff.getImage(1);
+    if (debug) console.log("image:", image);
+    const { bands } = await getStats(image, debug);
+    expect(bands[0].min).to.equal(0);
+    expect(bands[0].max).to.equal(25977);
   });
 });
 

@@ -19,9 +19,12 @@ async function getStats(image, debug){
   if (debug) console.log("numBands:", numBands);
 
   const tileWidth = image.getTileWidth();
+  if (debug) console.log("tileWidth:", tileWidth);
+
   const tileHeight = image.getTileHeight();
 
   let bytesPerPixel = image.getBytesPerPixel();
+  if (debug) console.log("bytesPerPixel:", bytesPerPixel);
 
   const srcSampleOffsets = [];
   const sampleReaders = [];
@@ -35,13 +38,17 @@ async function getStats(image, debug){
   }
 
   const numTilesPerRow = Math.ceil(image.getWidth() / image.getTileWidth());
+  if (debug) console.log("numTilesPerRow:", numTilesPerRow);
   const numTilesPerCol = Math.ceil(image.getHeight() / image.getTileHeight());
+  if (debug) console.log("numTilesPerCol:", numTilesPerCol);
 
   const noDataValue = fd.GDAL_NODATA ? parseFloat(fd.GDAL_NODATA) : null;
+  if (debug) console.log("noDataValue:", noDataValue);
 
   const bandResults = [];
 
   for (let bandIndex = 0; bandIndex < numBands; bandIndex++) {
+    if (debug) console.log("bandIndex:", bandIndex);
     let min = undefined;
     let max = undefined;
 
