@@ -7,6 +7,11 @@ const SECONDS_TO_MILLISECONDS = 1000;
 
 async function getStatsFromFilepath(filepath, debug=false) {
     const data = readFileSync(filepath);
+
+    if (data.byteLength === 0) {
+      throw new Error("This file has 0 bytes: " + filepath);
+    }
+
     const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
     const geotiff = await fromArrayBuffer(arrayBuffer);
     const image = await geotiff.getImage();
@@ -42,11 +47,21 @@ describe("GeoTIFF.js Test Data", function() {
 });
 
 describe("Landsat Data", function() {
-  it('should get stats for downloaded Landsat Scene', async function() {
+  it('should get stats for old downloaded Landsat Scene', async function() {
     this.timeout(20 * SECONDS_TO_MILLISECONDS);
-    const { bands } = await getStatsFromFilepath('./test/data/LC80120312013106LGN01_B6.tif');
+    const debug = false;
+    const { bands } = await getStatsFromFilepath('./test/data/LC80120312013106LGN01_B6.tif', debug);
     expect(bands[0].min).to.equal(0);
     expect(bands[0].max).to.equal(62196);
+  });
+  it('should get stats for newer downloaded Landsat Scene', async function() {
+    this.timeout(20 * SECONDS_TO_MILLISECONDS);
+    const debug = false;
+    const { bands } = await getStatsFromFilepath('./test/data/LC08_L1TP_024030_20180723_20180731_01_T1_B1.TIF', debug);
+    expect(bands[0].min).to.equal(0);
+    // this gives different results than GDAL, but is consistent with rasterio
+    // import rasterio; rasterio.open("./test/data/LC08_L1TP_024030_20180723_20180731_01_T1_B1.TIF").read()[0].max()
+    expect(bands[0].max).to.equal(54590);
   });
   it('should get stats for online Landsat Scene with overview file', async function() {
     this.timeout(20 * SECONDS_TO_MILLISECONDS);
