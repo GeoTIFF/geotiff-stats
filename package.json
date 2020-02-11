@@ -1,6 +1,6 @@
 {
   "name": "geotiff-stats",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Get Statistics from a Large GeoTIFF while Using a Low Amount of Memory",
   "main": "index.js",
   "scripts": {
@@ -27,7 +27,7 @@
   "homepage": "https://github.com/GeoTIFF/geotiff-stats#readme",
   "devDependencies": {
     "chai": "^4.2.0",
-    "geotiff": "^1.0.0-beta.6",
+    "geotiff": "^1.0.0-beta.7",
     "mocha": "^7.0.0"
   },
   "dependencies": {}

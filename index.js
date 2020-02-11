@@ -1,6 +1,4 @@
-const xpath = require('xpath');
 const { getDecoder } = require('geotiff/dist/compression');
-const { parseXml } = require('geotiff/dist/globals');
 
 // took this from geotiff package
 function sum(array, start, end) {
@@ -52,22 +50,14 @@ async function getStats(image, debug){
     let min = undefined;
     let max = undefined;
 
-    // try to get min and max via GDAL Metadata
-    if (fd.GDAL_METADATA) {
-      const string = fd.GDAL_METADATA;
-      const xmlDom = parseXml(string.substring(0, string.length - 1));
-      const evaluator = xmlDom.evaluate ? xmlDom : xpath;
-      const result = evaluator.evaluate(`GDALMetadata/Item`, xmlDom, null, 6, null);
-      for (let i = 0; i < result.snapshotLength; ++i) {
-        const node = result.snapshotItem(i);
-        if (node.getAttribute('sample') == bandIndex) {
-          const nodeName = node.getAttribute('name');
-          if (nodeName === "STATISTICS_MAXIMUM") {
-            max = parseFloat(node.textContent);
-          } else if (nodeName === "STATISTICS_MINIMUM") {
-            min = parseFloat(node.textContent);
-          }
-        }
+    const gdalMetadata = image.getGDALMetadata(bandIndex);
+    if (debug) console.log("gdalMetadata:", gdalMetadata);
+    if (gdalMetadata) {
+      if (typeof gdalMetadata.STATISTICS_MAXIMUM !== 'undefined') {
+        max = parseFloat(gdalMetadata.STATISTICS_MAXIMUM);
+      }
+      if (typeof gdalMetadata.STATISTICS_MINIMUM !== 'undefined') {
+        min = parseFloat(gdalMetadata.STATISTICS_MINIMUM);
       }
     }
 
