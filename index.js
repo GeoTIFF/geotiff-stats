@@ -1,4 +1,4 @@
-const { getDecoder } = require('geotiff/dist/compression');
+const { getDecoder } = require('geotiff');
 
 // took this from geotiff package
 function sum(array, start, end) {

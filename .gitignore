@@ -104,8 +104,11 @@ dist
 .tern-port
 
 # Data files
+*.ovr
+*.pdf
 *.TIF
 *.TIFF
 *.tif
 *.tiff
 *.xml
+*.zip
