@@ -112,3 +112,7 @@ dist
 *.tiff
 *.xml
 *.zip
+.DS_Store
+test/.DS_Store
+pnpm-lock.yaml
+*bak*

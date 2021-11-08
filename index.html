@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://unpkg.com/geotiff@1.0.8/dist-browser/geotiff.js"></script>
+        <script src="https://unpkg.com/state-util@0.2.2/dist/connect-state-to-element.js"></script>
+        <script src='./bundle.js'></script>
+
+        <script>
+          state = {
+            geotiff: null,
+            images: null,
+            stats: null
+          }
+        </script>
+        <style>
+          table, thead, tbody, trow {
+            display: table;
+            width: 100%;
+          }
+
+          td, th {
+            text-align: left  ;
+          }
+
+          .im-radio {
+            width: 25px;
+          }
+          .im-num {
+            width: 50px;
+          }
+          .im-width, .im-height {
+            width: 100px;
+          }
+
+          [data-state-images=none] #images{
+            display: none;
+          }
+          [data-state-stats=none] #stats {
+            display: none;
+          }
+        </style>
+    </head>
+    <body style="max-width: 900px; margin: 0 auto; padding: 30px;">
+      <h1>Calculate the Statistics of a GeoTIFF</h1>
+      <label for="url">URL:</label>
+      <input type="text" id="url" style="width: 100%">
+      <br/>
+      <section id="images">
+        <h2>Select an Image Below</h2>
+        <table>
+          <thead>
+            <th class="im-radio"></th>
+            <th class="im-num">#</th>
+            <th class="im-height">height</th>
+            <th class="im-width">width</th>
+            <th class="im-meta">metadata</th>
+          </thead>
+          <tbody>
+            
+          </tbody>
+        </table>
+      </section>
+      <section id="stats">
+        <textarea style="height: 100%; width: 100%;">calculating</textarea>
+      </section>
+
+      <script>
+        connectStateToElement({ state });
+
+        document.getElementById("url").addEventListener("change", async () => {
+          state.geotiff = null;
+          state.images = null;
+
+          const url = document.getElementById("url").value.trim();
+          if (url && url !== "") {
+            state.geotiff = await GeoTIFF.fromUrl(url);
+            const count = await state.geotiff.getImageCount();
+            console.log(state);
+            const images = [];
+            for (let i = 0; i < count; i++){
+              const image = await state.geotiff.getImage(i);
+              images.push({
+                height: image.getHeight(),
+                image,
+                width: image.getWidth(),
+                metadata: image.fileDirectory && image.fileDirectory.GDAL_METADATA
+              });
+            }
+            state.images = images;
+
+            // update images table
+            const tbody = document.querySelector("#images tbody");
+            tbody.innerHTML = "";
+            state.images.forEach(({ height, image, width, metadata}, i) => {
+              const trow = document.createElement("TROW");
+
+              const tdRadio = document.createElement("TD");
+              tdRadio.className = "im-radio";
+              const radio = document.createElement("input");
+              radio.setAttribute("type", "radio");
+              radio.setAttribute("name", "image");
+              tdRadio.appendChild(radio);
+              trow.appendChild(tdRadio);
+
+              const tdNum = document.createElement("TD");
+              tdNum.className = "im-num";
+              tdNum.textContent = i + 1;
+              trow.appendChild(tdNum);
+
+              const tdHeight = document.createElement("TD");
+              tdHeight.className = "im-height";
+              tdHeight.textContent = height;
+              trow.appendChild(tdHeight);
+
+              const tdWidth = document.createElement("TD");
+              tdWidth.className = "im-width";
+              tdWidth.textContent = height;              
+              trow.appendChild(tdWidth);
+
+              const tdMeta = document.createElement("TD");
+              tdMeta.className = "im-meta";
+              tdMeta.textContent = metadata;              
+              trow.appendChild(tdMeta);
+
+              tbody.appendChild(trow);
+
+
+              // add click handler
+              radio.addEventListener("click", async () => {
+                state.stats = "loading";
+                const textarea = document.querySelector("#stats textarea");
+                textarea.value = "calculating...";
+
+                state.stats = await getStats(image, { calcStatsOptions: { calcHistogram: false }});
+                document.querySelector("#stats textarea").value = JSON.stringify(state.stats, undefined, 4);
+
+                textarea.style.height = 0;
+                textarea.style.height = textarea.scrollHeight + "px";
+              });
+            });
+          }
+        });
+      </script>
+    </body>
+</html>

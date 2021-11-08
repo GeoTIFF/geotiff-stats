@@ -1,102 +1,86 @@
-const { getDecoder } = require('geotiff');
+const getGDALStats = require("./get-gdal-stats");
+const calcBandStats = require("./calc-band-stats");
 
-// took this from geotiff package
-function sum(array, start, end) {
-  let s = 0;
-  for (let i = start; i < end; ++i) {
-    s += array[i];
-  }
-  return s;
-}
+/**
+ * @name getStats
+ * @param {Object} image - the image object from tiff.getImage() using the geotiff.js library
+ * @param {Object} options
+ * @param {Object} options.debug - set to true to log more information
+ * @param {Array<String>} options.enough - if these stats are in the GDAL Metadata, then we will avoid running calcStats on all the images' pixels. default is ["min", "max"]. valid values are "min", "max", "median", "mean", "sum", "mode", "modes"
+ * @param {Object} options.calcStatsOptions - options to pass along to [calc-stats](https://github.com/danieljdufour/calc-stats#advanced-usage)
+ * @returns {Array<Object>} - Array of Statistics Objects
+ */
+async function getStats(image, options = {}) {
+  // support old getStats(image, debug)
+  if (options === true) options = { calcStatsOptions: undefined, debug: true };
 
-async function getStats(image, debug){
+  const { debug, enough = ["min", "max"] } = options || {};
+  if (debug) console.log("[geotiff-stats] debug:", debug);
 
-  const fd = image.fileDirectory;
-  if (debug) console.log("fd:", fd);
-  const numBands = fd.SamplesPerPixel;
-  if (debug) console.log("numBands:", numBands);
+  const calcStatsOptions = typeof options.calcStatsOptions === "object" ? { ...options.calcStatsOptions } : {};
 
-  const tileWidth = image.getTileWidth();
-  if (debug) console.log("tileWidth:", tileWidth);
+  const noDataValue = image.getGDALNoData();
+  if (debug) console.log("[geotiff-stats] noDataValue:", noDataValue);
 
-  const tileHeight = image.getTileHeight();
+  const samplesPerPixel = image.getSamplesPerPixel();
+  if (debug) console.log("[geotiff-stats] samplesPerPixel:", samplesPerPixel);
 
-  let bytesPerPixel = image.getBytesPerPixel();
-  if (debug) console.log("bytesPerPixel:", bytesPerPixel);
+  const stats = {
+    bands: []
+  };
 
-  const srcSampleOffsets = [];
-  const sampleReaders = [];
-  for (let i = 0; i < numBands; ++i) {
-    if (image.planarConfiguration === 1) {
-      srcSampleOffsets.push(sum(fd.BitsPerSample, 0, i) / 8);
-    } else {
-      srcSampleOffsets.push(0);
-    }
-    sampleReaders.push(image.getReaderForSample(i));
-  }
+  for (let bandIndex = 0; bandIndex < samplesPerPixel; bandIndex++) {
+    if (debug) console.log("[geotiff-stats] bandIndex:", bandIndex);
+    let bandStats = getGDALStats(image, bandIndex);
 
-  const numTilesPerRow = Math.ceil(image.getWidth() / image.getTileWidth());
-  if (debug) console.log("numTilesPerRow:", numTilesPerRow);
-  const numTilesPerCol = Math.ceil(image.getHeight() / image.getTileHeight());
-  if (debug) console.log("numTilesPerCol:", numTilesPerCol);
+    const isFloat = image.getSampleFormat(bandIndex) === 3;
 
-  const noDataValue = fd.GDAL_NODATA ? parseFloat(fd.GDAL_NODATA) : null;
-  if (debug) console.log("noDataValue:", noDataValue);
+    const sufficient = enough.every(key => typeof bandStats[key] === "number");
+    if (debug) console.log("[geotiff-stats] sufficient:", sufficient);
 
-  const bandResults = [];
+    if (!sufficient) {
+      if (debug)
+        console.log(
+          "[geotiff-stats] we weren't able to parse enough stats from the image's metadata, so running calcStats"
+        );
 
-  for (let bandIndex = 0; bandIndex < numBands; bandIndex++) {
-    if (debug) console.log("bandIndex:", bandIndex);
-    let min = undefined;
-    let max = undefined;
+      // let rangeFilter;
+      // if (typeof bandStats.max === "number" && typeof bandStats.min === "number") {
+      //   rangeFilter = ({ value }) => value >= bandStats.min && value <= bandStats.max;
+      // } else if (typeof bandStats.max === "number") {
+      //   rangeFilter = ({ value }) => value <= bandStats.max;
+      // } else if (typeof bandStats.min === "number") {
+      //   rangeFilter = ({ value }) => value >= bandStats.min;
+      // }
 
-    const gdalMetadata = image.getGDALMetadata(bandIndex);
-    if (debug) console.log("gdalMetadata:", gdalMetadata);
-    if (gdalMetadata) {
-      if (typeof gdalMetadata.STATISTICS_MAXIMUM !== 'undefined') {
-        max = parseFloat(gdalMetadata.STATISTICS_MAXIMUM);
+      let signFilter;
+      if (isFloat && typeof bandStats.min === "number" && bandStats.min >= 0) {
+        // sometimes there's an inconsistency in the GDAL NoData value for 32-bit floating point rasters
+        // and I'm not sure why, but we can fix it
+        // if all the values are positive (according to the GDAL Metadata), except for the No Data Value,
+        // then if we see a negative number, it's probably going to supposed to be no data
+        signFilter = ({ value }) => value >= 0;
       }
-      if (typeof gdalMetadata.STATISTICS_MINIMUM !== 'undefined') {
-        min = parseFloat(gdalMetadata.STATISTICS_MINIMUM);
-      }
-    }
 
-    if (min === undefined || max === undefined) {
-      for (let rowIndex = 0; rowIndex < numTilesPerCol; rowIndex++) {
-        for (let colIndex = 0; colIndex < numTilesPerRow; colIndex++) {
-          const reader = sampleReaders[bandIndex];
-          if (image.planarConfiguration === 2) {
-            bytesPerPixel = image.getSampleByteSize(bandIndex);
-          }
-          const decoder = getDecoder(fd);
-          const tile = await image.getTileOrStrip(colIndex, rowIndex, bandIndex, decoder);
-          const dataView = new DataView(tile.data);
-          const { byteLength } = dataView;
-          for (let y = 0; y < tileHeight; y++) {
-            for (let x = 0; x < tileWidth; x++) {
-              const pixelOffset = ((y * tileWidth) + x) * bytesPerPixel;
-
-              const byteOffset = pixelOffset + srcSampleOffsets[bandIndex];
-              if (byteOffset >= byteLength) {
-                /* we've reached the end of this row,
-                  so we can continue to the next row */
-                continue;
-              } else {
-                const value = reader.call(dataView, byteOffset, image.littleEndian);
-                if (value != noDataValue && !isNaN(value)) {
-                  if (typeof min === 'undefined' || value < min) min = value;
-                  else if (typeof max === 'undefined' || value > max) max = value;
-                }
-              }
-            }
-          }
+      if (typeof signFilter === "function") {
+        if (typeof calcStatsOptions.filter === "function") {
+          const userProvidedFilter = calcStatsOptions.filter;
+          calcStatsOptions.filter = data => {
+            return signFilter(data) && userProvidedFilter(data);
+          };
+        } else {
+          calcStatsOptions.filter = signFilter;
         }
       }
+      const calculated = await calcBandStats({ image, bandIndex, calcStatsOptions });
+      Object.assign(bandStats, calculated);
     }
-    bandResults.push({ max, min });
+
+    stats.bands.push(bandStats);
   }
-  return { bands: bandResults };
+  if (debug) console.log("[geotiff-stats] returning: " + JSON.stringify(stats));
+  return stats;
 }
 
-
-module.exports = { getStats };
+if (typeof module === "object") module.exports = { getStats };
+if (typeof window === "object") window.getStats = getStats;

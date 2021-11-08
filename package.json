@@ -3,9 +3,21 @@
   "version": "0.0.5",
   "description": "Get Statistics from a Large GeoTIFF while Using a Low Amount of Memory",
   "main": "index.js",
+  "unpkg": "bundle.js",
+  "jsdelivr": "bundle.js",
+  "files": [
+    "index.js",
+    "bundle.js",
+    "calc-band-stats.js",
+    "get-gdal-stats.js",
+    "iter-pixels.js",
+    "iter-tiles.js"
+  ],
   "scripts": {
+    "build": "npx browserify index.js > bundle.js",
+    "format": "npx prettier --arrow-parens=avoid --print-width=120 --trailing-comma=none --write *.js",
     "setup": "cd test/data && ./setup.sh",
-    "test": "node ./node_modules/.bin/mocha --reporter spec"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
@@ -26,9 +38,15 @@
   },
   "homepage": "https://github.com/GeoTIFF/geotiff-stats#readme",
   "devDependencies": {
-    "chai": "^4.2.0",
-    "geotiff": "^1.0.0-beta.11",
-    "mocha": "^7.0.0"
+    "find-and-read": "^1.0.2",
+    "flug": "^2.1.0",
+    "geotiff": "^1.0.8",
+    "toab": "^2.2.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "calc-stats": "^0.3.3",
+    "fast-bin": "^0.3.0",
+    "flat-iter": "^0.0.2",
+    "iter-fun": "^0.1.2"
+  }
 }
