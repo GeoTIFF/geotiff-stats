@@ -1,6 +1,6 @@
 {
   "name": "geotiff-stats",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "Get Statistics from a Large GeoTIFF while Using a Low Amount of Memory",
   "main": "index.js",
   "unpkg": "bundle.js",
