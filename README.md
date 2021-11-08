@@ -18,9 +18,27 @@ const data = readFileSync('LC80120312013106LGN01_B6.tif');
 const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
 const geotiff = await fromArrayBuffer(arrayBuffer);
 const image = await geotiff.getImage();
-const results = await getStats(image);
-console.log(results);
-// { bands: [{ min: 0, max: 62196 }] }
+const stats = await getStats(image);
+```
+stats is an object
+```js
+{
+    bands: [
+      {
+        median: 5901,
+        min: 0,
+        max: 62196,
+        sum: 414171673183,
+        mean: 7021.089224143871,
+        mode: 0,
+        modes: [0],
+        histogram: {
+          //...
+        }
+      }
+    ]
+  });
+}
 ```
 
 ## remote Cloud Optimized GeoTIFF
@@ -35,13 +53,11 @@ const geotiff_url = folder_url + "/LC08_L1TP_139045_20170304_20170316_01_T1_B1.T
 const overview_url = folder_url + "/LC08_L1TP_139045_20170304_20170316_01_T1_B1.TIF.ovr";
 const geotiff = await fromUrls(geotiff_url, [overview_url]);
 const image = await geotiff.getImage(1); // grabs the overview file
-const results = await getStats(image);
-console.log(results);
-// { bands: [{ min: 0, max: 25977 }] }
+const stats = await getStats(image);
 ```
 
 # accessing data from a specific band
-getStats returns an object with the max and min for each band.  You can access the max for the 3rd band (index of 2) with the following: `results.bands[2].max`
+getStats returns an object with the max and min for each band.  You can access the max for the 3rd band (index of 2) with the following: `stats.bands[2].max`
 
 # contact
 Post an issue at https://github.com/GeoTIFF/geotiff-stats/issues or email the package author Daniel J. Dufour at daniel.j.dufour@gmail.com
